@@ -15,7 +15,7 @@ pi:	pi.c
 	mpicc -O3 -o pi pi.c
 
 mxv_omp_mpi:	mxv_omp_mpi.c
-	mpicc -fopenmp -O3 -o mvx_omp_mpi mxv_omp_mpi.c
+	mpicc -fopenmp -O3 -o mxv_omp_mpi mxv_omp_mpi.c
 
 clean:
 	rm -f ${PGMS}

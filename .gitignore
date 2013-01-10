@@ -4,3 +4,4 @@ hello
 matrix_times_vector
 pi
 mxv_omp_mpi
+mmult
