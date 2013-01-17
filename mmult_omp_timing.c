@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     printf(" %f", times[1]);
     printf("\n");
   } else {
-    fprintf(stderr, "Usage mmult n\n");
+    fprintf(stderr, "Usage %s <n>\n", argv[0]);
   }
 }
 
