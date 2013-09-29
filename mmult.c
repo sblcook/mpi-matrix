@@ -24,7 +24,7 @@ double* gen_matrix(int n, int m) {
   double *a = malloc(sizeof(double) * n * m);
   for (i = 0; i < n; i++) {
     for (j = 0; j < m; j++) {
-      a[i*m + j] = rand()/RAND_MAX;
+      a[i*m + j] = (double)rand()/RAND_MAX;
     }
   }
   return a;
