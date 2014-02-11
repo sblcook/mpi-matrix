@@ -37,7 +37,7 @@ void compare_matrices(double* a, double* b, int nRows, int nCols) {
 		if (fabs(a[k]-b[k])/fabs(a[k]) > 1e-12) {
 			i = k/nCols;
 			j = k%nCols;
-			printf("a[%d][%d] == %.12g\nb[%d][%d] == %.12g\ndelta == %.12g\nrelerr == %.12g",
+			printf("a[%d][%d] == %.12g\nb[%d][%d] == %.12g\ndelta == %.12g\nrelerr == %.12g\n",
 				i, j, a[k], i, j, b[k], fabs(a[k]-b[k]), fabs(a[k]-b[k])/fabs(a[k]));
 			return;
 		}
