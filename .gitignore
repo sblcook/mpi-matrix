@@ -6,3 +6,4 @@ pi
 mxv_omp_mpi
 mmult_omp_timing
 mmult_omp_mpi
+mmult_mpi_omp
