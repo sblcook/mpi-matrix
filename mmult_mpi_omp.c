@@ -17,6 +17,47 @@ void compare_matrix(double *a, double *b, int nRows, int nCols);
 
 int main(int argc, char* argv[])
 {
+  FILE* fp1;
+  FILE* fp2;
+  fp1 = fopen(argv[1], "r");
+  fp2 = fopen(argv[2], "r");
+
+  char m1dims[100];
+  char m2dims[100];
+
+  fgets(m1dims, 100, fp1);
+  fgets(m2dims, 100, fp2);
+
+  printf("%s", m1dims);
+  //printf("%s", m2dims);
+
+  int m1cols;
+  int m1rows;
+  int m2cols;
+  int m2rows;
+//  char rows[20];
+//  char cols[20];
+
+  char *rows;
+  char *cols;
+  char *ptr;
+
+  rows = strstr(m1dims, "rows("); //move to beginning of rows
+  cols = strstr(m1dims, "cols(");
+  rows = rows + (sizeof(char) * 5);//offset to account for 'rows('
+  cols = cols + (sizeof(char) * 5);
+  m1rows = (int)strtol(rows, &ptr, 10);//read the rows
+  m1cols = (int)strtol(cols, &ptr, 10);//read the cols
+
+  rows = strstr(m2dims, "rows("); //move to beginning of rows
+  cols = strstr(m2dims, "cols(");
+  rows = rows + (sizeof(char) * 5);//offset to account for 'rows('
+  cols = cols + (sizeof(char) * 5);
+  m2rows = (int)strtol(rows, &ptr, 10);//read the rows
+  m2cols = (int)strtol(cols, &ptr, 10);//read the cols
+
+  printf("%d %d %d %d\n", m1rows, m1cols, m2rows, m2cols);
+  
   int nrows, ncols;
   double *aa;	/* the A matrix */
   double *bb;	/* the B matrix */
