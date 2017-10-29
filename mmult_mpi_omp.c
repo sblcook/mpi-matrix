@@ -24,19 +24,13 @@ int main(int argc, char* argv[])
 
   char m1dims[100];
   char m2dims[100];
-
   fgets(m1dims, 100, fp1);
   fgets(m2dims, 100, fp2);
-
-  printf("%s", m1dims);
-  //printf("%s", m2dims);
 
   int m1cols;
   int m1rows;
   int m2cols;
   int m2rows;
-//  char rows[20];
-//  char cols[20];
 
   char *rows;
   char *cols;
@@ -56,7 +50,12 @@ int main(int argc, char* argv[])
   m2rows = (int)strtol(rows, &ptr, 10);//read the rows
   m2cols = (int)strtol(cols, &ptr, 10);//read the cols
 
-  printf("%d %d %d %d\n", m1rows, m1cols, m2rows, m2cols);
+  //printf("%d %d %d %d\n", m1rows, m1cols, m2rows, m2cols);
+
+  if(m1cols != m2rows){
+    fprintf(stderr, "Invalid matrix dimensions\n");
+    exit(1);
+  }
   
   int nrows, ncols;
   double *aa;	/* the A matrix */
