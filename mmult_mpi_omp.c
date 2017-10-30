@@ -5,7 +5,7 @@
 #include <sys/times.h>
 #define min(x, y) ((x)<(y)?(x):(y))
 
-void populate_matrix(matrix[][], int m, int n, FILE* fp);
+double* populate_matrix(int m, int n, FILE* fp);
 int mmult(double *c, double *a, int aRows, int aCols, double *b, int bRows, int bCols);
 void compare_matrix(double *a, double *b, int nRows, int nCols);
 
@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
 {
 
   int nrows, ncols;
-  double aa[m1rows][m1cols];	/* the A matrix */
-  double bb[m2rows][m2cols];	/* the B matrix */
+  double *aa;	/* the A matrix */
+  double *bb;	/* the B matrix */
   double *cc1;	/* A x B computed using the omp-mpi code you write */
   double *cc2;	/* A x B computed using the conventional algorithm */
   int myid, numprocs;
@@ -62,16 +62,20 @@ int main(int argc, char* argv[])
       m2rows = (int)strtol(rows, &ptr, 10);//read the rows
       m2cols = (int)strtol(cols, &ptr, 10);//read the cols
 
-      printf("%d %d %d %d\n", m1rows, m1cols, m2rows, m2cols);
+     //printf("%d %d %d %d\n", m1rows, m1cols, m2rows, m2cols);
 
       if(m1cols != m2rows){
         fprintf(stderr, "Invalid matrix dimensions\n");
          exit(1);
       }
 
+      //allocate memory for aa and bb
+      //aa = malloc(sizeof(double) * m1rows * m1cols);
+      //bb = malloc(sizeof(double) * m2rows * m2cols);
 
-      //aa = gen_matrix(m1rows, m1cols, fp1);
-      //bb = gen_matrix(m2cols, m2rows, fp2);
+      //fill a and b
+      aa = populate_matrix(m2rows, m2cols, fp2);
+
       cc1 = malloc(sizeof(double) * nrows * nrows); 
       starttime = MPI_Wtime();
       /* Insert your master code here to store the product into cc1 */
@@ -80,6 +84,9 @@ int main(int argc, char* argv[])
       cc2  = malloc(sizeof(double) * nrows * nrows);
       mmult(cc2, aa, nrows, ncols, bb, ncols, nrows);
       compare_matrices(cc2, cc1, nrows, nrows);
+
+      fclose(fp1);
+      fclose(fp2);
     } else {
       // Slave Code goes here
     }
@@ -90,8 +97,21 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-void populate_matrix(matrix[][], int m, int n, FILE* fp){
+double* populate_matrix(int m, int n, FILE* fp){
+  int i,j;
+  char buffer[n * sizeof(double)];
+  double* matrix = malloc(sizeof(double) * m * n);
+  double num = 3;
 
+  for (i=0; i < n; i++){
+    for(j=0; j < m; j++){ 
+      fscanf(fp, "%s", buffer);
+      matrix[i*m + j] = atof(buffer);
+      printf("matrix read %f\n", matrix[i*m + j]);
+      printf("i, j %d %d\n", i, j);
+   }
+  }
+  return matrix;
 }
 
 
