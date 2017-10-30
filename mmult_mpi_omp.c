@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
   MPI_Status status;
   /* insert other global variables here */ 
   int m1cols, m1rows, m2cols, m2rows;
-  int i,j,success;
+  int i,j,success,rowsSent;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -55,11 +55,16 @@ int main(int argc, char* argv[])
       aa = populate_matrix(m1rows, m1cols, fp1);
       bb = populate_matrix(m2rows, m2cols, fp2);
       
+      //create a buffer to store data to send to slaves
+      double* sendBuffer = malloc(sizeof(double) * m1cols);
       //send data to slaves
-      MPI_Bcast(bb, nrows * ncols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      for(i = 1; i < numprocs; i++) {
+      MPI_Bcast(bb, m2rows*m2cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      for(i = 0; i < min(m1rows*m1cols, numprocs-1); i++) {
+       /* for(j=0; j< m1cols; j++) {
+         sendBuffer[j] = aa[i*m1cols + j]; 
+        }*/
         //MPI_Send(bb, m2rows*m2cols, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
-        MPI_Send(&aa[(i-1)*m1rows], m1cols, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+        MPI_Send(&aa[(i)*m1rows], m1cols, MPI_DOUBLE, i+1, i+1, MPI_COMM_WORLD);
       }
 
       //receive data from slaves
@@ -94,9 +99,11 @@ int main(int argc, char* argv[])
             printf("output %f\n", output[i]);
           }
           MPI_Send(output, m2cols, MPI_DOUBLE, 1, myid, MPI_COMM_WORLD);
-        }
+       	 }
+      }
       free(bb);
-  } else {
+      }
+      } else {
     fprintf(stderr, "Usage matrix_times_vector <size>\n");
   }
   MPI_Finalize();
