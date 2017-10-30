@@ -29,7 +29,8 @@ int main(int argc, char* argv[])
   MPI_Status status;
   /* insert other global variables here */ 
   int m1cols, m1rows, m2cols, m2rows;
-  int i,j,success,rowsSent;
+  int i,j,success;
+  int rowsSent = 0;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -65,6 +66,7 @@ int main(int argc, char* argv[])
         }*/
         //MPI_Send(bb, m2rows*m2cols, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
         MPI_Send(&aa[(i)*m1rows], m1cols, MPI_DOUBLE, i+1, i+1, MPI_COMM_WORLD);
+	rowsSent++;
       }
 
       //receive data from slaves
@@ -87,18 +89,19 @@ int main(int argc, char* argv[])
       MPI_Bcast(bb, m2rows*m2cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       
       if(m1rows <= myid) {
-        while(1) {      
+        while(1) {//loop to do work
           double input[m1cols];
           double output[m2cols];
       
           MPI_Recv(input, m1cols, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &status);
+          int row = status.MPI_TAG;
           for (i=0; i < m2cols; i++){
             for(j=0; j < m1cols; j++) {
               output[i] = output[i] + input[j] * bb[j*m2cols + i];
             }
             printf("output %f\n", output[i]);
           }
-          MPI_Send(output, m2cols, MPI_DOUBLE, 1, myid, MPI_COMM_WORLD);
+          MPI_Send(output, m2cols, MPI_DOUBLE, 0, row, MPI_COMM_WORLD);
        	 }
       }
       free(bb);
