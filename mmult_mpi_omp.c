@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
  
   success = fscanf(fp1, "rows(%d) cols(%d)", &m1rows, &m1cols);
   success = fscanf(fp2, "rows(%d) cols(%d)", &m2rows, &m2cols);
-
+ 
   //check that matrix dimensions work  
   if(m1cols != m2rows){
     fprintf(stderr, "Invalid matrix dimensions\n");
@@ -55,7 +55,9 @@ int main(int argc, char* argv[])
       //fill a and b from file input
       aa = populate_matrix(m1rows, m1cols, fp1);
       bb = populate_matrix(m2rows, m2cols, fp2);
-  
+      //print(aa, m1rows, m1cols);
+      //print(bb, m2rows, m2cols);
+      
       //start timer
       starttime = MPI_Wtime(); 
       //send data to slaves
@@ -79,10 +81,6 @@ int main(int argc, char* argv[])
         for(k=0; k< m2cols; k++) {
           cc1[(row-1)*m2cols + k] = receiveBuffer[k];
         }
-	
-        //printf("cc1 %f\ %f\n",cc1[0], cc1[1]);
-	//printf("recbuf %f\ %fn",receiveBuffer[0], receiveBuffer[1]);
-	//printf("rowsSent %d m1rows %d\n", rowsSent, m1rows);
 
         if(rowsSent < m1rows) {
           MPI_Send(&aa[rowsSent*m1rows], m1cols, MPI_DOUBLE, source, rowsSent+1,MPI_COMM_WORLD);
@@ -109,7 +107,6 @@ int main(int argc, char* argv[])
 
       bb = malloc(sizeof(double) * m2rows * m2cols);
       MPI_Bcast(bb, m2rows*m2cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
       if(myid <= m1rows) {
         while(1) {//loop to do work
           double input[m1cols];
@@ -119,12 +116,15 @@ int main(int argc, char* argv[])
           if(status.MPI_TAG == 0){
             break;
           }
+	  //print(input, 1, m1cols);
 
           row = status.MPI_TAG;
           for (i=0; i < m2cols; i++){
+	    double sum = 0;
             for(j=0; j < m1cols; j++) {
-              output[i] = output[i] + input[j] * bb[j*m2cols + i];
+              sum = sum + (input[j] * bb[j*m2cols + i]);
             }
+	    output[i] = sum;
           }
           MPI_Send(output, m2cols, MPI_DOUBLE, 0, row, MPI_COMM_WORLD);
         }
@@ -180,32 +180,4 @@ void writeToFile(double* matrix, int m, int n, char* fileName){
 
   fclose(fp);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
