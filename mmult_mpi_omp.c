@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
   MPI_Status status;
   /* insert other global variables here */ 
   int m1cols, m1rows, m2cols, m2rows;
-  int i,j,success;
+  int i,j,k,success,row,source;
   int rowsSent = 0;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -49,52 +49,73 @@ int main(int argc, char* argv[])
   }
 
    if (argc > 1) {
-    if (myid == 0) {
-     
-
+    if (myid == 0) {//am master
       //fill a and b from file input
       aa = populate_matrix(m1rows, m1cols, fp1);
       bb = populate_matrix(m2rows, m2cols, fp2);
-      
-      //create a buffer to store data to send to slaves
-      double* sendBuffer = malloc(sizeof(double) * m1cols);
+  
+      //start timer
+      starttime = MPI_Wtime(); 
       //send data to slaves
       MPI_Bcast(bb, m2rows*m2cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      for(i = 0; i < min(m1rows*m1cols, numprocs-1); i++) {
-       /* for(j=0; j< m1cols; j++) {
-         sendBuffer[j] = aa[i*m1cols + j]; 
-        }*/
-        //MPI_Send(bb, m2rows*m2cols, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+
+      for(i = 0; i < min(m1rows, numprocs-1); i++) {
         MPI_Send(&aa[(i)*m1rows], m1cols, MPI_DOUBLE, i+1, i+1, MPI_COMM_WORLD);
 	rowsSent++;
       }
 
-      //receive data from slaves
+      //receive info back from slaves
+      cc1 = malloc(sizeof(double) * m1rows * m2cols);
+      double* receiveBuffer = malloc(sizeof(double) * m2cols);
 
-      cc1 = malloc(sizeof(double) * m1rows * m1cols); 
-      starttime = MPI_Wtime();
-      /* Insert your master code here to store the product into cc1 */
+      for(i = 0; i< m1rows; i++){ 
+        MPI_Recv(receiveBuffer, m2cols, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        source = status.MPI_SOURCE;
+        row = status.MPI_TAG;
+
+        //fill in cc1 with data received
+        for(k=0; k< m2cols; k++) {
+          cc1[(row-1)*m2cols + k] = receiveBuffer[k];
+        }
+	
+        printf("cc1 %f\ %f\n",cc1[0], cc1[1]);
+	//printf("recbuf %f\ %fn",receiveBuffer[0], receiveBuffer[1]);
+	//printf("rowsSent %d m1rows %d\n", rowsSent, m1rows);
+
+        if(rowsSent < m1rows) {
+          MPI_Send(&aa[rowsSent*m1rows], m1cols, MPI_DOUBLE, source, rowsSent+1,MPI_COMM_WORLD);
+          rowsSent++;
+        }
+        else {
+          MPI_Send(MPI_BOTTOM, 0, MPI_DOUBLE, source, 0, MPI_COMM_WORLD);
+        }
+      }
+    
       endtime = MPI_Wtime();
-      printf("%f\n",(endtime - starttime));
+      printf("time elapsed: %f\n",(endtime - starttime));
       cc2  = malloc(sizeof(double) * m2rows * m2cols);
       mmult(cc2, aa, nrows, ncols, bb, ncols, nrows);
       compare_matrices(cc2, cc1, nrows, nrows);
 
       fclose(fp1);
       fclose(fp2);
-    } else {
-      // Slave Code goes here
+
+    } else {//am slave
+
       bb = malloc(sizeof(double) * m2rows * m2cols);
-      //MPI_Recv(bb, m2rows*m2cols, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &status);
       MPI_Bcast(bb, m2rows*m2cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      
-      if(m1rows <= myid) {
+
+      if(myid <= m1rows) {
         while(1) {//loop to do work
           double input[m1cols];
           double output[m2cols];
-      
-          MPI_Recv(input, m1cols, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &status);
-          int row = status.MPI_TAG;
+          
+          MPI_Recv(&input, m1cols, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+          if(status.MPI_TAG == 0){
+            break;
+          }
+
+          row = status.MPI_TAG;
           for (i=0; i < m2cols; i++){
             for(j=0; j < m1cols; j++) {
               output[i] = output[i] + input[j] * bb[j*m2cols + i];
@@ -102,13 +123,14 @@ int main(int argc, char* argv[])
             printf("output %f\n", output[i]);
           }
           MPI_Send(output, m2cols, MPI_DOUBLE, 0, row, MPI_COMM_WORLD);
-       	 }
+        }
       }
-      free(bb);
-      }
-      } else {
+      
+    }
+  }else {
     fprintf(stderr, "Usage matrix_times_vector <size>\n");
   }
+
   MPI_Finalize();
   return 0;
 }
