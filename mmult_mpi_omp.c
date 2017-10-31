@@ -9,6 +9,7 @@
 double* populate_matrix(int m, int n, FILE* fp);
 int mmult(double *c, double *a, int aRows, int aCols, double *b, int bRows, int bCols);
 void compare_matrix(double *a, double *b, int nRows, int nCols);
+void print(double *matrix, int m, int n);
 
 /** 
     Program to multiply a matrix times a matrix using both
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
           cc1[(row-1)*m2cols + k] = receiveBuffer[k];
         }
 	
-        printf("cc1 %f\ %f\n",cc1[0], cc1[1]);
+        //printf("cc1 %f\ %f\n",cc1[0], cc1[1]);
 	//printf("recbuf %f\ %fn",receiveBuffer[0], receiveBuffer[1]);
 	//printf("rowsSent %d m1rows %d\n", rowsSent, m1rows);
 
@@ -93,9 +94,11 @@ int main(int argc, char* argv[])
     
       endtime = MPI_Wtime();
       printf("time elapsed: %f\n",(endtime - starttime));
+
       cc2  = malloc(sizeof(double) * m2rows * m2cols);
-      mmult(cc2, aa, nrows, ncols, bb, ncols, nrows);
-      compare_matrices(cc2, cc1, nrows, nrows);
+      mmult(cc2, aa, m1rows, m1cols, bb, m2cols, m2rows);
+      compare_matrices(cc2, cc1, m1rows, m2cols);
+      print(cc1, m1rows, m1cols);
 
       fclose(fp1);
       fclose(fp2);
@@ -149,6 +152,46 @@ double* populate_matrix(int m, int n, FILE* fp){
   }
   return matrix;
 }
+
+void print(double* matrix, int m, int n){
+  int i,j;
+
+  for(i = 0; i < m; i++){
+    for(j = 0; j < n; j++){
+      printf("%f ", matrix[i*n + j]);
+    }
+    printf("\n");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
