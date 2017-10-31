@@ -10,6 +10,7 @@ double* populate_matrix(int m, int n, FILE* fp);
 int mmult(double *c, double *a, int aRows, int aCols, double *b, int bRows, int bCols);
 void compare_matrix(double *a, double *b, int nRows, int nCols);
 void print(double *matrix, int m, int n);
+void writeToFile(double* matrix, int m, int n, char* fileName);
 
 /** 
     Program to multiply a matrix times a matrix using both
@@ -98,7 +99,8 @@ int main(int argc, char* argv[])
       cc2  = malloc(sizeof(double) * m2rows * m2cols);
       mmult(cc2, aa, m1rows, m1cols, bb, m2cols, m2rows);
       compare_matrices(cc2, cc1, m1rows, m2cols);
-      print(cc1, m1rows, m1cols);
+      print(cc1, m1rows, m2cols);
+      writeToFile(cc1, m1rows, m2cols, "output.txt");
 
       fclose(fp1);
       fclose(fp2);
@@ -123,7 +125,6 @@ int main(int argc, char* argv[])
             for(j=0; j < m1cols; j++) {
               output[i] = output[i] + input[j] * bb[j*m2cols + i];
             }
-            printf("output %f\n", output[i]);
           }
           MPI_Send(output, m2cols, MPI_DOUBLE, 0, row, MPI_COMM_WORLD);
         }
@@ -165,7 +166,20 @@ void print(double* matrix, int m, int n){
 }
 
 
+void writeToFile(double* matrix, int m, int n, char* fileName){
+  int i,j;
+  FILE* fp;
+  fp = fopen(fileName, "w");
 
+  for(i = 0; i < m; i++){
+    for(j = 0; j < n; j++){
+      fprintf(fp, "%f ", matrix[i*n + j]);
+    }
+    fprintf(fp, "\n");
+  }
+
+  fclose(fp);
+}
 
 
 
